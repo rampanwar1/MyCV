@@ -1,0 +1,29 @@
+Pre-requisite
+Update the file with your node ip address
+vi /etc/exports
+
+/root/nfs      192.168.1xx.xxx(rw,sync,no_root_squash,no_subtree_check)
+/root/nfs      192.168.1xx.1xx(rw,sync,no_root_squash,no_subtree_check)
+/root/nfs      192.168.xxx.1xx(rw,sync,no_root_squash,no_subtree_check)
+
+exportfs -a
+
+-------------------------------------------------------------------------------------------------
+On Docker nodes install nfs utils
+
+yum install nfs-utils
+
+----------------------------------------------------------------------------------------------------
+Add firewall exceptions
+
+firewall-cmd --permanent --zone=public --add-service=nfs
+firewall-cmd --reload
+---------------------------------------------------------------------------------------------------
+Create NFS docker volume on all nodes
+
+docker volume create --driver local --name db_data --opt type=nfs4 --opt device=:/root/nfs/data --opt o=addr=192.168.xxx.1xx,rw,nolock
+
+---------------------------------------------------------------------------------------------------
+Create Docker service with NFS volume
+
+docker service create --name db --network mynetwork --mount type=volume,source=db_data,target=/var/lib/postgresql/data -e POSTGRES_PASSWORD=password --replicas 2 postgres:9.4
